@@ -1,11 +1,18 @@
 import { useState, useMemo } from "react";
-import { Card, Button, Input, Select, Space, Typography, Spin } from "antd";
+import { useTheme } from "@emotion/react";
+import { Card, Button, Space, Typography, Spin } from "antd";
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
+import {
+  StyledInput,
+  Select,
+  ActionButton,
+  TableContainer,
+} from "../../shared/ui/styles";
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef } from "ag-grid-community";
 import { useQuery, useMutation } from "@apollo/client";
@@ -26,6 +33,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 const { Title } = Typography;
 
 export const UsersPage = () => {
+  const theme = useTheme();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -203,18 +211,19 @@ export const UsersPage = () => {
       </Title>
 
       <Space style={{ marginBottom: 24 }} size={16} wrap>
-        <Input
+        <StyledInput
           prefix={<SearchOutlined />}
           placeholder="Filter by email"
           value={emailFilter}
           onChange={(e) => setEmailFilter(e.target.value)}
           style={{ width: 240 }}
           allowClear
+          theme={theme}
         />
         <Select
           placeholder="Filter by role"
           value={roleFilter}
-          onChange={setRoleFilter}
+          onChange={(value) => setRoleFilter(value as string)}
           style={{ width: 160 }}
           allowClear
         >
@@ -223,21 +232,23 @@ export const UsersPage = () => {
           <Select.Option value="moderator">Moderator</Select.Option>
           <Select.Option value="user">User</Select.Option>
         </Select>
-        <Button
+        <ActionButton
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
             setSelectedUser(null);
             setIsFormOpen(true);
           }}
+          theme={theme}
         >
           Add User
-        </Button>
+        </ActionButton>
       </Space>
 
-      <div
+      <TableContainer
         className="ag-theme-alpine"
         style={{ height: "calc(100vh - 300px)", width: "100%" }}
+        theme={theme}
       >
         <AgGridReact
           rowData={filteredUsers}
@@ -247,8 +258,9 @@ export const UsersPage = () => {
           rowSelection="single"
           suppressCellFocus={true}
           animateRows={true}
+          paginationAutoPageSize={true}
         />
-      </div>
+      </TableContainer>
 
       <UserForm
         open={isFormOpen}

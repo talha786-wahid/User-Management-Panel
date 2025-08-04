@@ -16,14 +16,16 @@ export const colors = {
   dark: {
     primary: "#0B99C4",
     primaryHover: "#7FC7DC",
-    background: "#1F2937",
-    backgroundElevated: "#374151",
+    background: "#111827",
+    backgroundElevated: "#1F2937",
     text: "#F9FAFB",
     textSecondary: "#D1D5DB",
     border: "#374151",
     borderHover: "#7FC7DC",
-    inputBg: "#111827",
-    cardBg: "#111827",
+    inputBg: "#1F2937",
+    cardBg: "#1F2937",
+    tableBg: "#1F2937",
+    tableHeaderBg: "#374151",
   },
   status: {
     active: {
@@ -56,7 +58,6 @@ const baseTheme: ThemeConfig = {
       "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
     borderRadius: 8,
     controlHeight: 40,
-    controlPadding: 12,
     fontSize: 14,
   },
   components: {
@@ -69,12 +70,10 @@ const baseTheme: ThemeConfig = {
     Input: {
       controlHeight: 40,
       borderRadius: 8,
-      paddingInline: 16,
     },
     Select: {
       controlHeight: 40,
       borderRadius: 8,
-      paddingInline: 16,
     },
     Modal: {
       borderRadius: 16,
@@ -116,5 +115,6 @@ export const darkTheme: ThemeConfig = {
     colorBorder: colors.dark.border,
     colorBorderSecondary: colors.dark.border,
     controlOutline: colors.dark.primaryHover,
+    colorBgLayout: colors.dark.background,
   },
 };

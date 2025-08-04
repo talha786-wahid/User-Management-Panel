@@ -14,9 +14,9 @@ async function startServer() {
   await apolloServer.start();
 
   apolloServer.applyMiddleware({
-    app: app as any, // Type assertion to bypass the type mismatch
+    app: app as any,
     cors: {
-      origin: ["http://localhost:5173"],
+      origin: ["http://localhost:5173", "http://localhost:3000"],
       credentials: true,
     },
   });
