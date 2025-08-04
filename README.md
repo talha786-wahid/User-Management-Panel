@@ -18,11 +18,86 @@ A full-stack application for managing users with features like user creation, ed
 ### Backend Features
 
 - GraphQL API with queries and mutations
-- User data management with in-memory storage
+- User data management (currently using in-memory storage)
 - Email uniqueness validation
 - Role-based user structure
 - Status management for users
 - Type-safe implementation
+
+### Data Storage
+
+Currently, the application uses in-memory storage (JavaScript array) for data, which means:
+
+- Data is not persistent and will be reset when the server restarts
+- All data is stored in RAM
+- Suitable for development and testing, but not for production
+
+#### Adding a Database (Recommended for Production)
+
+To make the application production-ready, you should implement one of these databases:
+
+1. **MongoDB**:
+
+   ```bash
+   cd backend
+   npm install mongoose
+   ```
+
+   - Perfect for document-based data
+   - Great for Node.js applications
+   - Easy to implement with minimal schema changes
+
+2. **PostgreSQL**:
+
+   ```bash
+   cd backend
+   npm install @prisma/client
+   npm install prisma --save-dev
+   ```
+
+   - Robust relational database
+   - Strong data consistency
+   - Great for complex queries
+
+3. **SQLite** (for small deployments):
+   ```bash
+   cd backend
+   npm install sqlite3
+   npm install typeorm
+   ```
+   - Self-contained, serverless
+   - Zero-configuration required
+   - Perfect for small to medium applications
+
+To implement a database:
+
+1. Create database configuration:
+
+   ```typescript
+   export const dbConfig = {};
+   ```
+
+2. Update environment variables:
+
+   ```env
+   DATABASE_URL=your_database_connection_string
+   ```
+
+3. Update user model to use database:
+
+   ```typescript
+   export const UserModel = {};
+   ```
+
+4. Add migration scripts:
+   ```json
+   {
+     "scripts": {
+       "migrate": "your_migration_command",
+       "seed": "your_seed_command"
+     }
+   }
+   ```
 
 ## Tech Stack
 
@@ -53,32 +128,32 @@ A full-stack application for managing users with features like user creation, ed
 
 ```
 user-management-panel/
-├── frontend/              # React frontend application
+├── frontend/
 │   ├── src/
-│   │   ├── app/          # App-wide providers and configuration
-│   │   ├── assets/       # Static assets
-│   │   ├── entities/     # Entity-specific code (User)
-│   │   ├── features/     # Feature components
-│   │   ├── pages/        # Page components
-│   │   └── shared/       # Shared utilities and components
+│   │   ├── app/
+│   │   ├── assets/
+│   │   ├── entities/
+│   │   ├── features/
+│   │   ├── pages/
+│   │   └── shared/
 │   └── package.json
 │
-├── backend/              # Node.js backend application
+├── backend/
 │   ├── src/
-│   │   ├── config/      # Configuration files
-│   │   ├── models/      # Data models
-│   │   ├── resolvers/   # GraphQL resolvers
-│   │   ├── schemas/     # GraphQL schema definitions
-│   │   └── index.ts     # Server entry point
+│   │   ├── config/
+│   │   ├── models/
+│   │   ├── resolvers/
+│   │   ├── schemas/
+│   │   └── index.ts
 │   └── package.json
 ```
 
-## Getting Started
+## Local Development Setup
 
 1. Clone the repository:
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/your-username/user-management-panel.git
    cd user-management-panel
    ```
 
@@ -87,21 +162,79 @@ user-management-panel/
    ```bash
    cd backend
    npm install
-   # Create .env file
    echo "PORT=4000" > .env
-   # Start the development server
    npm run dev
    ```
 
-3. Set up the frontend:
+   The backend server should start at `http://localhost:4000` with GraphQL playground at `http://localhost:4000/graphql`
+
+3. Set up the frontend (in a new terminal):
+
    ```bash
-   cd ../frontend
+   cd frontend
    npm install
-   # Create .env file
    echo "VITE_API_URL=http://localhost:4000/graphql" > .env
-   # Start the development server
    npm run dev
    ```
+
+   The frontend development server should start at `http://localhost:5173`
+
+### Troubleshooting Common Issues
+
+1. Port Already in Use:
+
+   ```bash
+   PORT=4001
+   VITE_API_URL=http://localhost:4001/graphql
+   ```
+
+2. Node Version Issues:
+
+   ```bash
+   node --version
+   nvm install 16
+   nvm use 16
+   ```
+
+3. Dependencies Installation Issues:
+
+   ```bash
+   npm cache clean --force
+   rm -rf node_modules
+   rm package-lock.json
+   npm install
+   ```
+
+### Verifying the Setup
+
+1. Backend Health Check:
+
+   - Open `http://localhost:4000/graphql` in your browser
+   - You should see the GraphQL playground
+   - Try the query:
+     ```graphql
+     query {
+       users {
+         id
+         name
+         email
+       }
+     }
+     ```
+
+2. Frontend Health Check:
+   - Open `http://localhost:5173` in your browser
+   - You should see the user management interface
+   - Try creating a new user
+   - Check if the table displays user data
+
+### Development Tools
+
+For better development experience, ensure you have:
+
+- VS Code or similar IDE
+- React Developer Tools browser extension
+- Apollo Client Developer Tools browser extension
 
 ## Available Scripts
 
