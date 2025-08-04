@@ -7,7 +7,6 @@ export interface User {
   createdAt: string;
 }
 
-// Mock data with 10 users
 let users: User[] = [
   {
     id: "1",
@@ -96,7 +95,15 @@ export const UserModel = {
 
   findById: (id: string) => users.find((user) => user.id === id),
 
+  findByEmail: (email: string) =>
+    users.find((user) => user.email.toLowerCase() === email.toLowerCase()),
+
   create: (data: Omit<User, "id" | "createdAt">) => {
+    const existingUser = UserModel.findByEmail(data.email);
+    if (existingUser) {
+      throw new Error("A user with this email already exists");
+    }
+
     const user: User = {
       ...data,
       id: String(users.length + 1),
@@ -109,6 +116,17 @@ export const UserModel = {
   update: (id: string, data: Partial<Omit<User, "id" | "createdAt">>) => {
     const index = users.findIndex((user) => user.id === id);
     if (index === -1) return null;
+
+    if (data.email) {
+      const existingUser = users.find(
+        (user) =>
+          user.id !== id &&
+          user.email.toLowerCase() === data.email?.toLowerCase()
+      );
+      if (existingUser) {
+        throw new Error("A user with this email already exists");
+      }
+    }
 
     users[index] = {
       ...users[index],

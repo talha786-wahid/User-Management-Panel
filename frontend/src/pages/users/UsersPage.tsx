@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTheme } from "@emotion/react";
-import { Card, Button, Space, Typography, Spin } from "antd";
+import { Card, Button, Space, Typography, Spin, Modal } from "antd";
 import {
   PlusOutlined,
   EditOutlined,
@@ -79,8 +79,21 @@ export const UsersPage = () => {
     try {
       await createUser({ variables: { input } });
       setIsFormOpen(false);
-    } catch (error) {
-      console.error("Failed to create user:", error);
+      return true;
+    } catch (error: any) {
+      if (error.message.includes("already exists")) {
+        Modal.error({
+          title: "Email Already Exists",
+          content:
+            "A user with this email address already exists. Please use a different email.",
+        });
+      } else {
+        Modal.error({
+          title: "Error",
+          content: "Failed to create user. Please try again.",
+        });
+      }
+      throw error;
     }
   };
 
@@ -92,8 +105,21 @@ export const UsersPage = () => {
       });
       setIsFormOpen(false);
       setSelectedUser(null);
-    } catch (error) {
-      console.error("Failed to update user:", error);
+      return true;
+    } catch (error: any) {
+      if (error.message.includes("already exists")) {
+        Modal.error({
+          title: "Email Already Exists",
+          content:
+            "A user with this email address already exists. Please use a different email.",
+        });
+      } else {
+        Modal.error({
+          title: "Error",
+          content: "Failed to update user. Please try again.",
+        });
+      }
+      throw error;
     }
   };
 
@@ -115,21 +141,38 @@ export const UsersPage = () => {
         headerName: "Name",
         sortable: true,
         filter: true,
+        minWidth: 150,
         flex: 1,
+        suppressSizeToFit: true,
       },
       {
         field: "email",
         headerName: "Email",
         sortable: true,
         filter: true,
+        minWidth: 200,
         flex: 1.5,
+        suppressSizeToFit: true,
+        cellRenderer: (params: any) => (
+          <div
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {params.value}
+          </div>
+        ),
       },
       {
         field: "role",
         headerName: "Role",
         sortable: true,
         filter: true,
+        minWidth: 120,
         flex: 1,
+        suppressSizeToFit: true,
         cellRenderer: (params: any) => (
           <span style={{ textTransform: "capitalize" }}>{params.value}</span>
         ),
@@ -139,7 +182,9 @@ export const UsersPage = () => {
         headerName: "Status",
         sortable: true,
         filter: true,
+        minWidth: 120,
         flex: 1,
+        suppressSizeToFit: true,
         cellRenderer: (params: any) => (
           <span className={`status-tag ${params.value}`}>
             {params.value.charAt(0).toUpperCase() + params.value.slice(1)}
@@ -151,7 +196,9 @@ export const UsersPage = () => {
         headerName: "Registration Date",
         sortable: true,
         filter: true,
+        minWidth: 160,
         flex: 1.2,
+        suppressSizeToFit: true,
         cellRenderer: (params: any) => {
           const date = new Date(params.value);
           return format(date, "dd.MM.yyyy, HH:mm");
@@ -159,7 +206,9 @@ export const UsersPage = () => {
       },
       {
         headerName: "Actions",
+        minWidth: 100,
         flex: 0.8,
+        suppressSizeToFit: true,
         cellRenderer: (params: any) => (
           <Space>
             <Button
@@ -247,7 +296,11 @@ export const UsersPage = () => {
 
       <TableContainer
         className="ag-theme-alpine"
-        style={{ height: "calc(100vh - 300px)", width: "100%" }}
+        style={{
+          height: "calc(100vh - 300px)",
+          width: "100%",
+          overflow: "auto",
+        }}
         theme={theme}
       >
         <AgGridReact
@@ -259,6 +312,17 @@ export const UsersPage = () => {
           suppressCellFocus={true}
           animateRows={true}
           paginationAutoPageSize={true}
+          defaultColDef={{
+            resizable: true,
+            sortable: true,
+            filter: true,
+          }}
+          onGridSizeChanged={(params) => {
+            params.api.sizeColumnsToFit();
+          }}
+          onFirstDataRendered={(params) => {
+            params.api.sizeColumnsToFit();
+          }}
         />
       </TableContainer>
 

@@ -1,4 +1,5 @@
 import { Form, Modal } from "antd";
+import { useTheme } from "@emotion/react";
 import type { User, UserInput } from "../../entities/user/types";
 import { StyledInput, Select } from "../../shared/ui/styles";
 
@@ -20,11 +21,12 @@ export const UserForm = ({
   loading = false,
 }: UserFormProps) => {
   const [form] = Form.useForm();
+  const theme = useTheme();
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      onSubmit(values);
+      await onSubmit(values);
       form.resetFields();
     } catch (error) {
       console.error("Validation failed:", error);
@@ -55,7 +57,7 @@ export const UserForm = ({
           label="Name"
           rules={[{ required: true, message: "Please enter name" }]}
         >
-          <StyledInput placeholder="Enter user name" />
+          <StyledInput placeholder="Enter user name" theme={theme} />
         </Form.Item>
 
         <Form.Item
@@ -66,7 +68,7 @@ export const UserForm = ({
             { type: "email", message: "Please enter valid email" },
           ]}
         >
-          <StyledInput placeholder="Enter email address" />
+          <StyledInput placeholder="Enter email address" theme={theme} />
         </Form.Item>
 
         <Form.Item
