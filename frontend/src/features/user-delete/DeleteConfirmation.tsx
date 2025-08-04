@@ -1,42 +1,11 @@
-import { Modal } from "antd";
-import styled from "@emotion/styled";
-import { User } from "../../entities/user/types";
-
-const StyledModal = styled(Modal)`
-  .ant-modal-content {
-    background: var(--neutral-50);
-  }
-
-  .ant-modal-header {
-    background: var(--neutral-50);
-    border-bottom: 1px solid var(--neutral-200);
-  }
-
-  .ant-modal-title {
-    color: var(--neutral-800);
-  }
-
-  .ant-modal-close {
-    color: var(--neutral-500);
-    &:hover {
-      color: var(--neutral-700);
-    }
-  }
-
-  .ant-modal-body {
-    color: var(--neutral-700);
-  }
-
-  .ant-modal-footer {
-    border-top: 1px solid var(--neutral-200);
-  }
-`;
+import { Modal, Space } from "antd";
+import { ExclamationCircleOutlined } from "@ant-design/icons";
 
 interface DeleteConfirmationProps {
   open: boolean;
   onCancel: () => void;
-  onConfirm: () => Promise<void>;
-  user?: User;
+  onConfirm: () => void;
+  userName: string;
   loading?: boolean;
 }
 
@@ -44,30 +13,29 @@ export const DeleteConfirmation = ({
   open,
   onCancel,
   onConfirm,
-  user,
-  loading,
+  userName,
+  loading = false,
 }: DeleteConfirmationProps) => {
   return (
-    <StyledModal
-      title="Delete User"
+    <Modal
       open={open}
+      title="Delete User"
       onCancel={onCancel}
       onOk={onConfirm}
       okText="Delete"
-      okButtonProps={{
-        danger: true,
-        loading,
-      }}
-      cancelButtonProps={{
-        disabled: loading,
-      }}
+      okButtonProps={{ danger: true, loading }}
+      destroyOnHidden
+      width={480}
+      centered
       maskClosable={false}
     >
-      <p>
-        Are you sure you want to delete user{" "}
-        <strong>{user?.name || "Unknown"}</strong>? This action cannot be
-        undone.
-      </p>
-    </StyledModal>
+      <Space>
+        <ExclamationCircleOutlined style={{ color: "#ff4d4f", fontSize: 22 }} />
+        <span>
+          Are you sure you want to delete <strong>{userName}</strong>? This
+          action cannot be undone.
+        </span>
+      </Space>
+    </Modal>
   );
 };

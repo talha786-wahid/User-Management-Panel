@@ -1,42 +1,213 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+:root {
+  --light-bg: #f0f2f5;
+  --light-text: #1f2937;
+  --light-border: #e5e7eb;
+  --dark-bg: #1f2937;
+  --dark-text: #f9fafb;
+  --dark-border: #374151;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+
+.dark {
+  background-color: var(--dark-bg);
+  color: var(--dark-text);
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  background-color: var(--ant-color-bg-container);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--ant-color-border);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ant-color-text);
+}
+
+.theme-toggle {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.theme-toggle:hover {
+  background-color: var(--ant-color-bg-elevated);
+}
+
+.app-content {
+  flex: 1;
+  padding: 24px;
+}
+
+.app-footer {
   text-align: center;
+  padding: 16px 24px;
+  background-color: var(--ant-color-bg-container);
+  border-top: 1px solid var(--ant-color-border);
+  color: var(--ant-color-text-secondary);
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* AG Grid Theme Overrides */
+.ag-theme-alpine {
+  --ag-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --ag-font-size: 14px;
+  --ag-border-radius: 8px;
+  --ag-cell-horizontal-padding: 16px;
+  --ag-header-column-separator-display: none;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.light .ag-theme-alpine {
+  --ag-background-color: #ffffff;
+  --ag-border-color: var(--light-border);
+  --ag-header-background-color: #f9fafb;
+  --ag-odd-row-background-color: #ffffff;
+  --ag-header-foreground-color: var(--light-text);
+  --ag-foreground-color: var(--light-text);
+  --ag-row-hover-color: #f3f4f6;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.dark .ag-theme-alpine {
+  --ag-background-color: #111827;
+  --ag-border-color: var(--dark-border);
+  --ag-header-background-color: #1f2937;
+  --ag-odd-row-background-color: #111827;
+  --ag-header-foreground-color: var(--dark-text);
+  --ag-foreground-color: var(--dark-text);
+  --ag-row-hover-color: #374151;
 }
 
-.card {
-  padding: 2em;
+/* Modal Styles */
+.ant-modal-content {
+  padding: 0 !important;
 }
 
-.read-the-docs {
-  color: #888;
+.ant-modal-header {
+  margin: 0 !important;
+  padding: 16px 24px !important;
+  border-bottom: 1px solid var(--ant-color-border) !important;
+}
+
+.ant-modal-body {
+  padding: 24px !important;
+}
+
+.ant-modal-footer {
+  margin: 0 !important;
+  padding: 16px 24px !important;
+  border-top: 1px solid var(--ant-color-border) !important;
+}
+
+/* Form Styles */
+.ant-form-item-label > label {
+  color: var(--ant-color-text) !important;
+  font-weight: 500 !important;
+}
+
+.ant-input {
+  background-color: var(--ant-color-bg-container) !important;
+  border-color: var(--ant-color-border) !important;
+  color: var(--ant-color-text) !important;
+}
+
+.ant-select-selector {
+  background-color: var(--ant-color-bg-container) !important;
+  border-color: var(--ant-color-border) !important;
+}
+
+.ant-select-selection-item {
+  color: var(--ant-color-text) !important;
+}
+
+/* Button Styles */
+.ant-btn {
+  height: 40px !important;
+  padding: 6px 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+}
+
+.ant-btn-primary {
+  background-color: #0b99c4 !important;
+  border-color: #0b99c4 !important;
+}
+
+.ant-btn-primary:hover {
+  background-color: #046684 !important;
+  border-color: #046684 !important;
+}
+
+/* Status Tags */
+.status-tag {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-tag.active {
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.dark .status-tag.active {
+  color: #34d399;
+  background: #064e3b;
+  border: 1px solid #059669;
+}
+
+.status-tag.pending {
+  color: #d97706;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+}
+
+.dark .status-tag.pending {
+  color: #fbbf24;
+  background: #78350f;
+  border: 1px solid #d97706;
+}
+
+.status-tag.banned {
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.dark .status-tag.banned {
+  color: #f87171;
+  background: #7f1d1d;
+  border: 1px solid #dc2626;
 }

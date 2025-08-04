@@ -1,6 +1,8 @@
+// User role and status types
 export type UserRole = "admin" | "moderator" | "user";
-export type UserStatus = "active" | "pending" | "banned";
+export type UserStatus = "active" | "banned" | "pending";
 
+// User interface
 export interface User {
   id: string;
   name: string;
@@ -10,24 +12,10 @@ export interface User {
   createdAt: string;
 }
 
-export interface UserFormData {
+// User input interface for create/update operations
+export interface UserInput {
   name: string;
   email: string;
-  password?: string;
   role: UserRole;
   status: UserStatus;
-}
-
-export interface UserFilter {
-  email?: string;
-  role?: UserRole;
-  status?: UserStatus;
-  startDate?: string;
-  endDate?: string;
-}
-
-export interface CacheEntry {
-  users: User[];
-  total: number;
-  timestamp: number;
 }

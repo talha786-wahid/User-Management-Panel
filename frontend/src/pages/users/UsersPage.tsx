@@ -1,557 +1,254 @@
-import React, { useState, useCallback } from "react";
+import { useState, useMemo } from "react";
+import { Card, Button, Input, Select, Space, Typography, Spin } from "antd";
 import {
-  Button,
-  message,
-  Space,
-  Dropdown,
-  Tag,
-  Table,
-  Input,
-  DatePicker,
-} from "antd";
-import type { ColumnsType } from "antd/es/table";
-import { format } from "date-fns";
-import { useMutation, useQuery } from "@apollo/client";
-import styled from "@emotion/styled";
-import {
+  PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  UserOutlined,
-  SafetyCertificateOutlined,
-  TeamOutlined,
-  PlusOutlined,
-  FilterOutlined,
-  ExportOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-
-import { UserForm } from "../../features/user-form/UserForm";
-import { DeleteConfirmation } from "../../features/user-delete/DeleteConfirmation";
-import { LoadingOverlay } from "../../shared/ui/LoadingOverlay";
+import { AgGridReact } from "ag-grid-react";
+import type { ColDef } from "ag-grid-community";
+import { useQuery, useMutation } from "@apollo/client";
+import { format } from "date-fns";
 import { useUserStore } from "../../entities/user/model/store";
-import {
-  User,
-  UserFormData,
-  UserRole,
-  UserStatus,
-  UserFilter,
-} from "../../entities/user/types";
 import {
   GET_USERS,
   CREATE_USER,
   UPDATE_USER,
   DELETE_USER,
-  UPDATE_USER_ROLE,
 } from "../../entities/user/api/graphql";
-import { DATE_FORMAT, DATE_FORMAT_FULL } from "../../shared/config/constants";
+import type { User, UserInput } from "../../entities/user/types";
+import { UserForm } from "../../features/user-form/UserForm";
+import { DeleteConfirmation } from "../../features/user-delete/DeleteConfirmation";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 
-const PageWrapper = styled.div`
-  padding: 24px;
-  background: var(--neutral-50);
-  border-radius: 16px;
-  min-height: calc(100vh - 140px);
-  position: relative;
-`;
-
-const PageHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  background: var(--neutral-50);
-  padding: 16px 24px;
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-`;
-
-const Title = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  h1 {
-    margin: 0;
-    font-family: "Poppins", sans-serif;
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--neutral-800);
-  }
-
-  &::before {
-    content: "";
-    display: block;
-    width: 3px;
-    height: 20px;
-    background: var(--primary-500);
-    border-radius: 2px;
-  }
-`;
-
-const HeaderActions = styled.div`
-  display: flex;
-  gap: 12px;
-  align-items: center;
-`;
-
-const TableCard = styled.div`
-  background: var(--neutral-50);
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: var(--shadow-sm);
-
-  .ant-table-wrapper {
-    .ant-table {
-      background: transparent;
-    }
-
-    .ant-table-thead > tr > th {
-      background: var(--neutral-50);
-      color: var(--neutral-600);
-      font-family: "Poppins", sans-serif;
-      font-weight: 600;
-      border-bottom: 1px solid var(--neutral-200);
-      padding: 16px;
-    }
-
-    .ant-table-tbody > tr > td {
-      border-bottom: 1px solid var(--neutral-200);
-      padding: 16px;
-      color: var(--neutral-800);
-    }
-
-    .ant-table-tbody > tr:hover > td {
-      background: var(--neutral-100);
-    }
-
-    .ant-table-row-selected > td {
-      background: var(--primary-50);
-    }
-
-    .ant-pagination {
-      margin-top: 16px;
-    }
-  }
-`;
-
-const FilterSection = styled.div`
-  display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-`;
-
-const FilterInput = styled(Input)`
-  max-width: 300px;
-  background: var(--neutral-50);
-  border-color: var(--neutral-200);
-  color: var(--neutral-800);
-
-  &:hover {
-    border-color: var(--primary-500);
-  }
-
-  &:focus {
-    border-color: var(--primary-500);
-    box-shadow: 0 0 0 2px var(--primary-50);
-  }
-
-  .ant-input-prefix {
-    color: var(--neutral-500);
-  }
-`;
-
-const FilterDatePicker = styled(DatePicker.RangePicker)`
-  max-width: 280px;
-  background: var(--neutral-50);
-  border-color: var(--neutral-200);
-  color: var(--neutral-800);
-
-  input {
-    color: var(--neutral-800);
-  }
-
-  .ant-picker-separator {
-    color: var(--neutral-500);
-  }
-
-  &:hover {
-    border-color: var(--primary-500);
-  }
-
-  &:focus {
-    border-color: var(--primary-500);
-    box-shadow: 0 0 0 2px var(--primary-50);
-  }
-`;
-
-const StatusTag = styled(Tag)<{ $status: string }>`
-  border: none;
-  border-radius: 6px;
-  padding: 4px 12px;
-  text-transform: capitalize;
-  background: ${({ $status }) => {
-    switch ($status.toLowerCase()) {
-      case "active":
-        return "var(--success-50)";
-      case "pending":
-        return "var(--warning-50)";
-      case "banned":
-        return "var(--error-50)";
-      default:
-        return "var(--neutral-100)";
-    }
-  }};
-  color: ${({ $status }) => {
-    switch ($status.toLowerCase()) {
-      case "active":
-        return "var(--success-500)";
-      case "pending":
-        return "var(--warning-500)";
-      case "banned":
-        return "var(--error-500)";
-      default:
-        return "var(--neutral-500)";
-    }
-  }};
-`;
-
-const RoleIcon = {
-  admin: <SafetyCertificateOutlined style={{ color: "var(--primary-500)" }} />,
-  moderator: <TeamOutlined style={{ color: "var(--warning-500)" }} />,
-  user: <UserOutlined style={{ color: "var(--success-500)" }} />,
-};
+const { Title } = Typography;
 
 export const UsersPage = () => {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [emailFilter, setEmailFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [dateFilter, setDateFilter] = useState<[string, string] | null>(null);
+  const [roleFilter, setRoleFilter] = useState("");
 
-  const { users, setUsers, total, setCachedData } = useUserStore();
+  const { users, setUsers } = useUserStore();
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { loading } = useQuery(GET_USERS, {
+    onCompleted: (data) => setUsers(data.users),
+    onError: (error) => console.error("Failed to fetch users:", error),
+  });
 
-  const { loading: loadingUsers, refetch } = useQuery(GET_USERS, {
-    variables: {
-      offset: (page - 1) * pageSize,
-      limit: pageSize,
-      filter: {
-        email: emailFilter || undefined,
-        role: roleFilter.length > 0 ? roleFilter[0] : undefined,
-        status: statusFilter.length > 0 ? statusFilter[0] : undefined,
-        startDate: dateFilter?.[0] || undefined,
-        endDate: dateFilter?.[1] || undefined,
-      },
-    },
-    onCompleted: (data) => {
-      setUsers(data.users.items, data.users.total);
-      const filter: UserFilter = {
-        email: emailFilter || undefined,
-        role: roleFilter.length > 0 ? (roleFilter[0] as UserRole) : undefined,
-        status:
-          statusFilter.length > 0 ? (statusFilter[0] as UserStatus) : undefined,
-        startDate: dateFilter?.[0],
-        endDate: dateFilter?.[1],
-      };
-
-      setCachedData(
-        {
-          offset: (page - 1) * pageSize,
-          limit: pageSize,
-          filter,
-        },
-        {
-          users: data.users.items,
-          total: data.users.total,
-          timestamp: Date.now(),
-        }
-      );
+  const [createUser, { loading: createLoading }] = useMutation(CREATE_USER, {
+    update(_cache, { data }) {
+      if (data?.createUser) {
+        setUsers([...users, data.createUser]);
+      }
     },
   });
 
-  const [createUser, { loading: loadingCreate }] = useMutation(CREATE_USER, {
-    onCompleted: () => {
-      refetch();
-      message.success("User created successfully");
+  const [updateUser, { loading: updateLoading }] = useMutation(UPDATE_USER, {
+    update(_cache, { data }) {
+      if (data?.updateUser) {
+        setUsers(
+          users.map((user) =>
+            user.id === data.updateUser.id ? data.updateUser : user
+          )
+        );
+      }
+    },
+  });
+
+  const [deleteUser, { loading: deleteLoading }] = useMutation(DELETE_USER, {
+    update(_cache, _data) {
+      if (selectedUser) {
+        setUsers(users.filter((user) => user.id !== selectedUser.id));
+      }
+    },
+  });
+
+  const handleCreateUser = async (input: UserInput) => {
+    try {
+      await createUser({ variables: { input } });
       setIsFormOpen(false);
-    },
-    onError: () => {
-      message.error("Failed to create user");
-    },
-  });
-
-  const [updateUserMutation, { loading: loadingUpdate }] = useMutation(
-    UPDATE_USER,
-    {
-      onCompleted: () => {
-        refetch();
-        message.success("User updated successfully");
-        setIsFormOpen(false);
-      },
-      onError: () => {
-        message.error("Failed to update user");
-      },
+    } catch (error) {
+      console.error("Failed to create user:", error);
     }
-  );
-
-  const [updateUserRole, { loading: loadingRole }] = useMutation(
-    UPDATE_USER_ROLE,
-    {
-      onCompleted: () => {
-        refetch();
-        message.success("Role updated successfully");
-      },
-      onError: () => {
-        message.error("Failed to update role");
-      },
-    }
-  );
-
-  const [deleteUserMutation, { loading: loadingDelete }] = useMutation(
-    DELETE_USER,
-    {
-      onCompleted: () => {
-        refetch();
-        message.success("User deleted successfully");
-        setIsDeleteOpen(false);
-      },
-      onError: () => {
-        message.error("Failed to delete user");
-      },
-    }
-  );
-
-  const handleCreateUser = async (data: UserFormData) => {
-    await createUser({
-      variables: { input: data },
-    });
   };
 
-  const handleUpdateUser = async (data: UserFormData) => {
+  const handleUpdateUser = async (input: UserInput) => {
     if (!selectedUser) return;
-    await updateUserMutation({
-      variables: {
-        id: selectedUser.id,
-        input: data,
-      },
-    });
+    try {
+      await updateUser({
+        variables: { id: selectedUser.id, input },
+      });
+      setIsFormOpen(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error("Failed to update user:", error);
+    }
   };
 
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
-    await deleteUserMutation({
-      variables: { id: selectedUser.id },
-    });
+    try {
+      await deleteUser({ variables: { id: selectedUser.id } });
+      setIsDeleteModalOpen(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+    }
   };
 
-  const handleRoleChange = async (userId: string, newRole: UserRole) => {
-    await updateUserRole({
-      variables: {
-        id: userId,
-        role: newRole,
+  const columnDefs = useMemo<ColDef[]>(
+    () => [
+      {
+        field: "name",
+        headerName: "Name",
+        sortable: true,
+        filter: true,
+        flex: 1,
       },
-    });
-  };
-
-  const columns: ColumnsType<User> = [
-    {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
-      sorter: true,
-    },
-    {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
-      sorter: true,
-      filteredValue: emailFilter ? [emailFilter] : [],
-    },
-    {
-      title: "Role",
-      dataIndex: "role",
-      key: "role",
-      render: (role: string, record) => (
-        <Dropdown
-          menu={{
-            items: [
-              { key: "admin", label: "Admin", icon: RoleIcon.admin },
-              {
-                key: "moderator",
-                label: "Moderator",
-                icon: RoleIcon.moderator,
-              },
-              { key: "user", label: "User", icon: RoleIcon.user },
-            ],
-            onClick: ({ key }) => handleRoleChange(record.id, key as UserRole),
-          }}
-          trigger={["click"]}
-        >
-          <Space style={{ cursor: "pointer" }}>
-            {RoleIcon[role as keyof typeof RoleIcon]}
-            <span>{role}</span>
+      {
+        field: "email",
+        headerName: "Email",
+        sortable: true,
+        filter: true,
+        flex: 1.5,
+      },
+      {
+        field: "role",
+        headerName: "Role",
+        sortable: true,
+        filter: true,
+        flex: 1,
+        cellRenderer: (params: any) => (
+          <span style={{ textTransform: "capitalize" }}>{params.value}</span>
+        ),
+      },
+      {
+        field: "status",
+        headerName: "Status",
+        sortable: true,
+        filter: true,
+        flex: 1,
+        cellRenderer: (params: any) => (
+          <span className={`status-tag ${params.value}`}>
+            {params.value.charAt(0).toUpperCase() + params.value.slice(1)}
+          </span>
+        ),
+      },
+      {
+        field: "createdAt",
+        headerName: "Registration Date",
+        sortable: true,
+        filter: true,
+        flex: 1.2,
+        cellRenderer: (params: any) => {
+          const date = new Date(params.value);
+          return format(date, "dd.MM.yyyy, HH:mm");
+        },
+      },
+      {
+        headerName: "Actions",
+        flex: 0.8,
+        cellRenderer: (params: any) => (
+          <Space>
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => {
+                setSelectedUser(params.data);
+                setIsFormOpen(true);
+              }}
+            />
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => {
+                setSelectedUser(params.data);
+                setIsDeleteModalOpen(true);
+              }}
+            />
           </Space>
-        </Dropdown>
-      ),
-      filters: [
-        { text: "Admin", value: "admin" },
-        { text: "Moderator", value: "moderator" },
-        { text: "User", value: "user" },
-      ],
-      filteredValue: roleFilter,
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => (
-        <StatusTag $status={status}>{status}</StatusTag>
-      ),
-      filters: [
-        { text: "Active", value: "active" },
-        { text: "Pending", value: "pending" },
-        { text: "Banned", value: "banned" },
-      ],
-      filteredValue: statusFilter,
-    },
-    {
-      title: "Created At",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date: string) => {
-        const formattedDate = format(new Date(parseInt(date)), DATE_FORMAT);
-        const fullDate = format(new Date(parseInt(date)), DATE_FORMAT_FULL);
-        return <span title={fullDate}>{formattedDate}</span>;
+        ),
       },
-      sorter: true,
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setSelectedUser(record);
-              setIsFormOpen(true);
-            }}
-            loading={loadingUpdate && selectedUser?.id === record.id}
-          />
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => {
-              setSelectedUser(record);
-              setIsDeleteOpen(true);
-            }}
-            loading={loadingDelete && selectedUser?.id === record.id}
-          />
-        </Space>
-      ),
-    },
-  ];
-
-  const handleTableChange = useCallback(
-    (pagination: any, filters: any, sorter: any) => {
-      if (filters.role) setRoleFilter(filters.role);
-      if (filters.status) setStatusFilter(filters.status);
-      refetch();
-    },
-    [refetch]
+    ],
+    []
   );
 
-  const isLoading =
-    loadingUsers ||
-    loadingCreate ||
-    loadingUpdate ||
-    loadingDelete ||
-    loadingRole;
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      const matchesEmail = user.email
+        .toLowerCase()
+        .includes(emailFilter.toLowerCase());
+      const matchesRole = !roleFilter || user.role === roleFilter;
+      return matchesEmail && matchesRole;
+    });
+  }, [users, emailFilter, roleFilter]);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "48px" }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
-    <PageWrapper>
-      {isLoading && <LoadingOverlay />}
+    <Card>
+      <Title level={4} style={{ marginBottom: 24 }}>
+        User Management
+      </Title>
 
-      <PageHeader>
-        <Title>
-          <h1>Users</h1>
-        </Title>
-        <HeaderActions>
-          <Button
-            icon={<FilterOutlined />}
-            onClick={() => {
-              setEmailFilter("");
-              setRoleFilter([]);
-              setStatusFilter([]);
-              setDateFilter(null);
-              refetch();
-            }}
-          >
-            Reset Filters
-          </Button>
-          <Button icon={<ExportOutlined />}>Export</Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setSelectedUser(null);
-              setIsFormOpen(true);
-            }}
-          >
-            Add User
-          </Button>
-        </HeaderActions>
-      </PageHeader>
-
-      <FilterSection>
-        <FilterInput
-          placeholder="Filter by email"
+      <Space style={{ marginBottom: 24 }} size={16} wrap>
+        <Input
           prefix={<SearchOutlined />}
+          placeholder="Filter by email"
           value={emailFilter}
           onChange={(e) => setEmailFilter(e.target.value)}
+          style={{ width: 240 }}
           allowClear
-          onPressEnter={() => refetch()}
         />
-        <FilterDatePicker
-          onChange={(dates) => {
-            if (dates) {
-              setDateFilter([dates[0]!.toISOString(), dates[1]!.toISOString()]);
-              refetch();
-            } else {
-              setDateFilter(null);
-              refetch();
-            }
+        <Select
+          placeholder="Filter by role"
+          value={roleFilter}
+          onChange={setRoleFilter}
+          style={{ width: 160 }}
+          allowClear
+        >
+          <Select.Option value="">Select Role</Select.Option>
+          <Select.Option value="admin">Admin</Select.Option>
+          <Select.Option value="moderator">Moderator</Select.Option>
+          <Select.Option value="user">User</Select.Option>
+        </Select>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => {
+            setSelectedUser(null);
+            setIsFormOpen(true);
           }}
-        />
-      </FilterSection>
+        >
+          Add User
+        </Button>
+      </Space>
 
-      <TableCard>
-        <Table
-          columns={columns}
-          dataSource={users}
-          rowKey="id"
-          pagination={{
-            current: page,
-            pageSize: pageSize,
-            total: total,
-            onChange: (page, pageSize) => {
-              setPage(page);
-              setPageSize(pageSize);
-            },
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total) => `Total ${total} users`,
-          }}
-          onChange={handleTableChange}
-          loading={isLoading}
+      <div
+        className="ag-theme-alpine"
+        style={{ height: "calc(100vh - 300px)", width: "100%" }}
+      >
+        <AgGridReact
+          rowData={filteredUsers}
+          columnDefs={columnDefs}
+          pagination={true}
+          paginationPageSize={10}
+          rowSelection="single"
+          suppressCellFocus={true}
+          animateRows={true}
         />
-      </TableCard>
+      </div>
 
       <UserForm
         open={isFormOpen}
@@ -560,20 +257,21 @@ export const UsersPage = () => {
           setSelectedUser(null);
         }}
         onSubmit={selectedUser ? handleUpdateUser : handleCreateUser}
-        initialValues={selectedUser ?? undefined}
-        loading={loadingCreate || loadingUpdate}
+        initialValues={selectedUser || undefined}
+        title={selectedUser ? "Edit User" : "Add User"}
+        loading={createLoading || updateLoading}
       />
 
       <DeleteConfirmation
-        open={isDeleteOpen}
+        open={isDeleteModalOpen}
         onCancel={() => {
-          setIsDeleteOpen(false);
+          setIsDeleteModalOpen(false);
           setSelectedUser(null);
         }}
         onConfirm={handleDeleteUser}
-        user={selectedUser ?? undefined}
-        loading={loadingDelete}
+        userName={selectedUser?.name || ""}
+        loading={deleteLoading}
       />
-    </PageWrapper>
+    </Card>
   );
 };

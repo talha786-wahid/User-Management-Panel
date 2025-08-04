@@ -1,42 +1,42 @@
-import { Tag } from "antd";
-import { UserStatus } from "../../entities/user/types.ts";
 import styled from "@emotion/styled";
+import type { UserStatus } from "../../entities/user/types";
+import { colors } from "../config/theme";
 
-const statusConfig: Record<
-  UserStatus,
-  { color: string; backgroundColor: string; text: string }
-> = {
-  active: {
-    color: "#389e0d",
-    backgroundColor: "#f6ffed",
-    text: "Active",
-  },
-  banned: {
-    color: "#cf1322",
-    backgroundColor: "#fff1f0",
-    text: "Banned",
-  },
-  pending: {
-    color: "#d48806",
-    backgroundColor: "#fffbe6",
-    text: "Pending",
-  },
-};
-
-const StyledTag = styled(Tag)<{ $status: UserStatus }>`
-  border-radius: 4px;
-  padding: 4px 8px;
+const Tag = styled.span<{ status: UserStatus; isDark?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 13px;
   font-weight: 500;
-  text-transform: capitalize;
-  border: 1px solid ${(props) => statusConfig[props.$status].color};
-  color: ${(props) => statusConfig[props.$status].color};
-  background: ${(props) => statusConfig[props.$status].backgroundColor};
+  line-height: 1.4;
+  transition: all 0.2s;
+
+  ${({ status, isDark = false }) => {
+    const statusColors = colors.status[status];
+    return isDark
+      ? `
+        color: ${statusColors.text};
+        background: ${statusColors.darkBg};
+        border: 1px solid ${statusColors.darkBorder};
+      `
+      : `
+        color: ${statusColors.text};
+        background: ${statusColors.bg};
+        border: 1px solid ${statusColors.border};
+      `;
+  }}
 `;
 
 interface StatusTagProps {
   status: UserStatus;
+  isDark?: boolean;
 }
 
-export const StatusTag = ({ status }: StatusTagProps) => (
-  <StyledTag $status={status}>{statusConfig[status].text}</StyledTag>
-);
+export const StatusTag = ({ status, isDark }: StatusTagProps) => {
+  return (
+    <Tag status={status} isDark={isDark}>
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </Tag>
+  );
+};

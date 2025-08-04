@@ -1,70 +1,34 @@
 import { create } from "zustand";
-import { User, UserFilter, CacheEntry } from "../types";
-
-interface CacheKey {
-  offset: number;
-  limit: number;
-  filter?: UserFilter;
-}
+import type { User, UserInput } from "../types";
 
 interface UserStore {
   users: User[];
-  total: number;
-  cache: Map<string, CacheEntry>;
-  setUsers: (users: User[], total: number) => void;
-  updateUser: (user: User) => void;
-  deleteUser: (id: string) => void;
+  loading: boolean;
+  error: string | null;
+  setUsers: (users: User[]) => void;
   addUser: (user: User) => void;
-  getCachedData: (key: CacheKey) => CacheEntry | undefined;
-  setCachedData: (key: CacheKey, data: CacheEntry) => void;
+  updateUser: (id: string, updates: Partial<UserInput>) => void;
+  deleteUser: (id: string) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
 }
 
-const serializeCacheKey = (key: CacheKey): string => JSON.stringify(key);
-
-export const useUserStore = create<UserStore>((set, get) => ({
+export const useUserStore = create<UserStore>((set) => ({
   users: [],
-  total: 0,
-  cache: new Map(),
-
-  setUsers: (users, total) => {
-    set({ users, total });
-  },
-
-  updateUser: (updatedUser) =>
+  loading: false,
+  error: null,
+  setUsers: (users) => set({ users }),
+  addUser: (user) => set((state) => ({ users: [...state.users, user] })),
+  updateUser: (id, updates) =>
     set((state) => ({
       users: state.users.map((user) =>
-        user.id === updatedUser.id ? updatedUser : user
+        user.id === id ? { ...user, ...updates } : user
       ),
     })),
-
   deleteUser: (id) =>
     set((state) => ({
       users: state.users.filter((user) => user.id !== id),
-      total: state.total - 1,
     })),
-
-  addUser: (user) =>
-    set((state) => ({
-      users: [...state.users, user],
-      total: state.total + 1,
-    })),
-
-  getCachedData: (key) => {
-    const serializedKey = serializeCacheKey(key);
-    const entry = get().cache.get(serializedKey);
-    if (!entry) return undefined;
-
-    // Cache expires after 5 minutes
-    if (Date.now() - entry.timestamp > 5 * 60 * 1000) {
-      get().cache.delete(serializedKey);
-      return undefined;
-    }
-
-    return entry;
-  },
-
-  setCachedData: (key, data) => {
-    const serializedKey = serializeCacheKey(key);
-    get().cache.set(serializedKey, data);
-  },
+  setLoading: (loading) => set({ loading }),
+  setError: (error) => set({ error }),
 }));

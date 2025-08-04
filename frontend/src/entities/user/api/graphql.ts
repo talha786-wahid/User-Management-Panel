@@ -1,23 +1,20 @@
 import { gql } from "@apollo/client";
 
 export const GET_USERS = gql`
-  query GetUsers($offset: Int, $limit: Int, $filter: UserFilter) {
-    users(offset: $offset, limit: $limit, filter: $filter) {
-      items {
-        id
-        name
-        email
-        role
-        status
-        createdAt
-      }
-      total
+  query GetUsers {
+    users {
+      id
+      name
+      email
+      role
+      status
+      createdAt
     }
   }
 `;
 
 export const CREATE_USER = gql`
-  mutation CreateUser($input: CreateUserInput!) {
+  mutation CreateUser($input: UserInput!) {
     createUser(input: $input) {
       id
       name
@@ -30,7 +27,7 @@ export const CREATE_USER = gql`
 `;
 
 export const UPDATE_USER = gql`
-  mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {
+  mutation UpdateUser($id: ID!, $input: UserInput!) {
     updateUser(id: $id, input: $input) {
       id
       name
@@ -38,15 +35,6 @@ export const UPDATE_USER = gql`
       role
       status
       createdAt
-    }
-  }
-`;
-
-export const UPDATE_USER_ROLE = gql`
-  mutation UpdateUserRole($id: ID!, $role: String!) {
-    updateUserRole(id: $id, role: $role) {
-      id
-      role
     }
   }
 `;

@@ -1,46 +1,21 @@
+import type { ReactNode } from "react";
 import {
   ApolloClient,
   InMemoryCache,
-  ApolloProvider,
-  from,
+  ApolloProvider as BaseApolloProvider,
 } from "@apollo/client";
-import { onError } from "@apollo/client/link/error";
-import { createHttpLink } from "@apollo/client/link/http";
-import { App, message } from "antd";
 
-const httpLink = createHttpLink({
-  uri: "http://localhost:4000/graphql",
-  credentials: "include",
-});
-
-const errorLink = onError(({ graphQLErrors, networkError }) => {
-  if (graphQLErrors) {
-    graphQLErrors.forEach(({ message: errorMessage }) => {
-      message.error(`GraphQL Error: ${errorMessage}`);
-    });
-  }
-
-  if (networkError) {
-    message.error(`Network Error: ${networkError.message}`);
-  }
-});
+const API_URL = import.meta.env.VITE_API_URL;
 
 const client = new ApolloClient({
-  link: from([errorLink, httpLink]),
+  uri: API_URL,
   cache: new InMemoryCache(),
-  defaultOptions: {
-    watchQuery: {
-      fetchPolicy: "cache-and-network",
-    },
-  },
 });
 
-export const ApolloProviderWrapper: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  return (
-    <ApolloProvider client={client}>
-      <App>{children}</App>
-    </ApolloProvider>
-  );
+interface ApolloProviderProps {
+  children: ReactNode;
+}
+
+export const ApolloProvider = ({ children }: ApolloProviderProps) => {
+  return <BaseApolloProvider client={client}>{children}</BaseApolloProvider>;
 };
